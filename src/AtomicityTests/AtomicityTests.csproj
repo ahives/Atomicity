@@ -17,6 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Atomicity.Extensions.DependencyInjection\Atomicity.Extensions.DependencyInjection.csproj" />
       <ProjectReference Include="..\Atomicity\Atomicity.csproj" />
     </ItemGroup>
 

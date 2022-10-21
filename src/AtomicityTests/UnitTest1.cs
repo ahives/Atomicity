@@ -1,9 +1,22 @@
 namespace AtomicityTests;
 
 using Atomicity;
+using Atomicity.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 
+[TestFixture]
 public class Tests
 {
+    private ServiceProvider _services;
+
+    [OneTimeSetUp]
+    public void Init()
+    {
+        _services = new ServiceCollection()
+            .AddAtomicity()
+            .BuildServiceProvider();
+    }
+    
     [SetUp]
     public void Setup()
     {
@@ -16,7 +29,26 @@ public class Tests
         var op2 = Operations.Create<Operation2>();
         var op3 = Operations.Create<Operation3>();
 
-        new Atomicity(new Durability())
+        new Atomicity(new TransactionDurability())
+            .Configure(x =>
+            {
+                x.TurnOnConsoleLogging();
+                x.Retry();
+            })
+            .AddOperations(op1, op2, op3)
+            .Execute();
+        
+        Assert.Pass();
+    }
+
+    [Test]
+    public void Test2()
+    {
+        var op1 = Operations.Create<Operation1>();
+        var op2 = Operations.Create<Operation2>();
+        var op3 = Operations.Create<Operation3>();
+
+        _services.GetService<IAtomicity>()
             .Configure(x =>
             {
                 x.TurnOnConsoleLogging();

@@ -2,23 +2,24 @@ namespace Atomicity;
 
 using Configuration;
 
-public class Atomicity
+public class Atomicity :
+    IAtomicity
 {
     private AtomicityConfig _config;
-    private readonly IDurability _durability;
+    private readonly ITransactionDurability _transactionDurability;
     private readonly List<Operation> _operations;
 
-    public Atomicity(IDurability durability)
+    public Atomicity(ITransactionDurability transactionDurability)
     {
         _config = AtomicityConfigCache.Default;
-        _durability = durability;
+        _transactionDurability = transactionDurability;
         _operations = new List<Operation>();
     }
 
     public void Execute(Guid transactionId = default)
     {
         int index = -1;
-        int start = _durability.GetStartOperation(transactionId);
+        int start = _transactionDurability.GetStartOperation(transactionId);
         for (int i = start; i < _operations.Count; i++)
         {
             if (_config.ConsoleLoggingOn)
@@ -26,7 +27,7 @@ public class Atomicity
             
             if (_operations[i].Work.Invoke())
             {
-                _durability.Save(transactionId);
+                _transactionDurability.Save(transactionId);
                 continue;
             }
 

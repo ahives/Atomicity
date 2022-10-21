@@ -1,6 +1,6 @@
 namespace Atomicity;
 
-public interface IDurability
+public interface ITransactionDurability
 {
     int GetStartOperation(Guid transactionId);
     

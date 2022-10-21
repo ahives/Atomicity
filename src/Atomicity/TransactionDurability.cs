@@ -1,7 +1,7 @@
 namespace Atomicity;
 
-public class Durability :
-    IDurability
+public class TransactionDurability :
+    ITransactionDurability
 {
     public int GetStartOperation(Guid transactionId)
     {
