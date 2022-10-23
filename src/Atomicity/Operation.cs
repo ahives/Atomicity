@@ -2,11 +2,15 @@ namespace Atomicity;
 
 using Configuration;
 
-public record Operation
+public class Operation
 {
-    public Func<bool> Work { get; init; }
+    public OperationConfig Config { get; set; }
+
+    public string Name { get; init; }
     
-    public Action Compensation { get; init; }
+    public int SequenceNumber { get; init; }
+
+    public Func<bool> Work { get; set; }
     
-    public OperationConfig Config { get; init; }
+    public Action Compensation { get; set; }
 }

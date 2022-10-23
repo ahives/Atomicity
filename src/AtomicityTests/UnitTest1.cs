@@ -2,6 +2,7 @@ namespace AtomicityTests;
 
 using Atomicity;
 using Atomicity.Extensions.DependencyInjection;
+using Atomicity.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
 [TestFixture]
@@ -25,11 +26,11 @@ public class Tests
     [Test]
     public void Test1()
     {
-        var op1 = Operations.Create<Operation1>();
-        var op2 = Operations.Create<Operation2>();
-        var op3 = Operations.Create<Operation3>();
+        var op1 = OperationFactory.Create<Operation1>();
+        var op2 = OperationFactory.Create<Operation2>();
+        var op3 = OperationFactory.Create<Operation3>();
 
-        new Atomicity(new TransactionDurability())
+        new Atomicity(new DurableTransactionProvider())
             .Configure(x =>
             {
                 x.TurnOnConsoleLogging();
@@ -44,9 +45,9 @@ public class Tests
     [Test]
     public void Test2()
     {
-        var op1 = Operations.Create<Operation1>();
-        var op2 = Operations.Create<Operation2>();
-        var op3 = Operations.Create<Operation3>();
+        var op1 = OperationFactory.Create<Operation1>();
+        var op2 = OperationFactory.Create<Operation2>();
+        var op3 = OperationFactory.Create<Operation3>();
 
         _services.GetService<IAtomicity>()
             .Configure(x =>
@@ -61,27 +62,43 @@ public class Tests
     }
 
     class Operation1 :
-        AtomicityOperation
+        AtomicityOperation<Operation1>
     {
-        protected override Func<bool> Work()
+        protected override Func<bool> DoWork()
         {
             return () => true;
+        }
+
+        protected override Action Compensate()
+        {
+            return () =>
+            {
+                Console.WriteLine("Something went wrong in Operation 1");
+            };
         }
     }
 
     class Operation2 :
-        AtomicityOperation
+        AtomicityOperation<Operation2>
     {
-        protected override Func<bool> Work()
+        protected override Func<bool> DoWork()
         {
             return () => true;
+        }
+
+        protected override Action Compensate()
+        {
+            return () =>
+            {
+                Console.WriteLine("Something went wrong in Operation 2");
+            };
         }
     }
 
     class Operation3 :
-        AtomicityOperation
+        AtomicityOperation<Operation3>
     {
-        protected override Func<bool> Work()
+        protected override Func<bool> DoWork()
         {
             return () => true;
         }

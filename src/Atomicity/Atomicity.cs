@@ -1,33 +1,34 @@
 namespace Atomicity;
 
 using Configuration;
+using Persistence;
 
 public class Atomicity :
     IAtomicity
 {
     private AtomicityConfig _config;
-    private readonly ITransactionDurability _transactionDurability;
+    private readonly IDurableTransactionProvider _durableTransactionProvider;
     private readonly List<Operation> _operations;
 
-    public Atomicity(ITransactionDurability transactionDurability)
+    public Atomicity(IDurableTransactionProvider durableTransactionProvider)
     {
         _config = AtomicityConfigCache.Default;
-        _transactionDurability = transactionDurability;
+        _durableTransactionProvider = durableTransactionProvider;
         _operations = new List<Operation>();
     }
 
     public void Execute(Guid transactionId = default)
     {
         int index = -1;
-        int start = _transactionDurability.GetStartOperation(transactionId);
+        int start = _durableTransactionProvider.GetStartOperation(transactionId);
         for (int i = start; i < _operations.Count; i++)
         {
             if (_config.ConsoleLoggingOn)
-                Console.WriteLine($"Executing operation {i + 1}");
+                Console.WriteLine($"Executing operation {_operations[i].SequenceNumber}");
             
             if (_operations[i].Work.Invoke())
             {
-                _transactionDurability.Save(transactionId);
+                _durableTransactionProvider.Save(transactionId, _operations[i].Name, _operations[i].SequenceNumber);
                 continue;
             }
 
@@ -38,7 +39,7 @@ public class Atomicity :
         for (int i = index; i >= 0; i--)
         {
             if (_config.ConsoleLoggingOn)
-                Console.WriteLine($"Compensating operation {i + 1}");
+                Console.WriteLine($"Compensating operation {_operations[i].SequenceNumber}");
 
             _operations[i].Compensation.Invoke();
         }
@@ -46,11 +47,11 @@ public class Atomicity :
 
     public Atomicity AddOperations(Operation operation, params Operation[] operations)
     {
-        _operations.Add(operation);
+        _operations.Add(operation.SetSequenceNumber(_operations.Count + 1));
 
         foreach (var op in operations)
         {
-            _operations.Add(op);
+            _operations.Add(op.SetSequenceNumber(_operations.Count + 1));
         }
         
         return this;

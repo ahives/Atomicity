@@ -1,23 +1,39 @@
 namespace Atomicity;
 
+using Microsoft.Extensions.Logging;
 using Configuration;
 
-public abstract class AtomicityOperation :
+public abstract class AtomicityOperation<TOperation> :
     IOperation
 {
-    public virtual Operation Create()
+    private readonly ILogger<AtomicityOperation<TOperation>> _logger;
+
+    protected AtomicityOperation(ILogger<AtomicityOperation<TOperation>> logger)
     {
-        return new Operation
+        _logger = logger;
+    }
+
+    protected AtomicityOperation()
+    {
+    }
+
+    public virtual Operation CreateOperation() =>
+        new()
         {
-            Work = Work(),
-            Compensation = Compensation(),
+            Name = GetName(),
+            Work = DoWork(),
+            Compensation = Compensate(),
             Config = Configure()
         };
-    }
 
     protected virtual OperationConfig Configure() => OperationConfigCache.Default;
 
-    protected virtual Action Compensation() => () => { };
+    protected virtual string GetName() => typeof(TOperation).FullName ?? throw new InvalidOperationException();
 
-    protected abstract Func<bool> Work();
+    protected virtual Action Compensate() => () =>
+    {
+        _logger.LogDebug("");
+    };
+
+    protected abstract Func<bool> DoWork();
 }
