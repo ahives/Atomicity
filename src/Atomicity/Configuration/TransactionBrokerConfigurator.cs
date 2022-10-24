@@ -1,6 +1,6 @@
 namespace Atomicity.Configuration;
 
-public interface AtomicityConfigurator
+public interface TransactionBrokerConfigurator
 {
     void TurnOnLogging();
     

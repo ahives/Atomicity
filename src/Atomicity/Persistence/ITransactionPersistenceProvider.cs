@@ -1,6 +1,6 @@
 namespace Atomicity.Persistence;
 
-public interface IDurableTransactionProvider
+public interface ITransactionPersistenceProvider
 {
     int GetStartOperation(Guid transactionId);
     

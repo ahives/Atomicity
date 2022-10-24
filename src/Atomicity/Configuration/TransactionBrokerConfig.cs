@@ -1,6 +1,6 @@
 namespace Atomicity.Configuration;
 
-public record AtomicityConfig
+public record TransactionBrokerConfig
 {
     public bool ConsoleLoggingOn { get; init; }
     

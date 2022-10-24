@@ -26,11 +26,11 @@ public class Tests
     [Test]
     public void Test1()
     {
-        var op1 = OperationFactory.Create<Operation1>();
-        var op2 = OperationFactory.Create<Operation2>();
-        var op3 = OperationFactory.Create<Operation3>();
+        var op1 = Factory.CreateOperation<Operation1>();
+        var op2 = Factory.CreateOperation<Operation2>();
+        var op3 = Factory.CreateOperation<Operation3>();
 
-        new Atomicity(new DurableTransactionProvider())
+        new TransactionBroker(new TransactionPersistenceProvider())
             .Configure(x =>
             {
                 x.TurnOnConsoleLogging();
@@ -45,11 +45,11 @@ public class Tests
     [Test]
     public void Test2()
     {
-        var op1 = OperationFactory.Create<Operation1>();
-        var op2 = OperationFactory.Create<Operation2>();
-        var op3 = OperationFactory.Create<Operation3>();
+        var op1 = Factory.CreateOperation<Operation1>();
+        var op2 = Factory.CreateOperation<Operation2>();
+        var op3 = Factory.CreateOperation<Operation3>();
 
-        _services.GetService<IAtomicity>()
+        _services.GetService<ITransactionBroker>()
             .Configure(x =>
             {
                 x.TurnOnConsoleLogging();
@@ -62,7 +62,7 @@ public class Tests
     }
 
     class Operation1 :
-        AtomicityOperation<Operation1>
+        TransactionOperation<Operation1>
     {
         protected override Func<bool> DoWork()
         {
@@ -79,7 +79,7 @@ public class Tests
     }
 
     class Operation2 :
-        AtomicityOperation<Operation2>
+        TransactionOperation<Operation2>
     {
         protected override Func<bool> DoWork()
         {
@@ -96,11 +96,11 @@ public class Tests
     }
 
     class Operation3 :
-        AtomicityOperation<Operation3>
+        TransactionOperation<Operation3>
     {
         protected override Func<bool> DoWork()
         {
-            return () => true;
+            return () => false;
         }
     }
 }

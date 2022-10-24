@@ -2,5 +2,5 @@ namespace Atomicity;
 
 public interface IOperation
 {
-    Operation CreateOperation();
+    Operation CreateOperation(int sequenceNumber);
 }

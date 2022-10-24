@@ -3,24 +3,25 @@ namespace Atomicity;
 using Microsoft.Extensions.Logging;
 using Configuration;
 
-public abstract class AtomicityOperation<TOperation> :
+public abstract class TransactionOperation<TOperation> :
     IOperation
 {
-    private readonly ILogger<AtomicityOperation<TOperation>> _logger;
+    private readonly ILogger<TransactionOperation<TOperation>> _logger;
 
-    protected AtomicityOperation(ILogger<AtomicityOperation<TOperation>> logger)
+    protected TransactionOperation(ILogger<TransactionOperation<TOperation>> logger)
     {
         _logger = logger;
     }
 
-    protected AtomicityOperation()
+    protected TransactionOperation()
     {
     }
 
-    public virtual Operation CreateOperation() =>
+    public virtual Operation CreateOperation(int sequenceNumber) =>
         new()
         {
             Name = GetName(),
+            SequenceNumber = sequenceNumber,
             Work = DoWork(),
             Compensation = Compensate(),
             Config = Configure()
@@ -32,7 +33,7 @@ public abstract class AtomicityOperation<TOperation> :
 
     protected virtual Action Compensate() => () =>
     {
-        _logger.LogDebug("");
+        // _logger.LogDebug("You forgot to add compensation logic");
     };
 
     protected abstract Func<bool> DoWork();
