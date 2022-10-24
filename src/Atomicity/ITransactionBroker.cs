@@ -6,9 +6,9 @@ public interface ITransactionBroker
 {
     void Execute(Guid transactionId = default);
 
-    TransactionBroker AddOperations(IOperation operation, params IOperation[] operations);
+    Transaction AddOperations(IOperation operation, params IOperation[] operations);
 
-    TransactionBroker Configure(Action<TransactionBrokerConfigurator> configurator);
+    Transaction Configure(Action<TransactionBrokerConfigurator> configurator);
 
-    TransactionBroker Configure();
+    Transaction Configure();
 }

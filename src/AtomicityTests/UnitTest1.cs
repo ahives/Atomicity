@@ -30,7 +30,7 @@ public class Tests
         var op2 = Factory.CreateOperation<Operation2>();
         var op3 = Factory.CreateOperation<Operation3>();
 
-        new TransactionBroker(new TransactionPersistenceProvider())
+        new Transaction(new PersistenceProvider())
             .Configure(x =>
             {
                 x.TurnOnConsoleLogging();

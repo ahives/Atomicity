@@ -3,7 +3,7 @@ namespace Atomicity.Persistence;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-[Table("Operations")]
+[Table("TransactionOperations")]
 public class OperationEntity
 {
     [Column("Id"), Key, Required]

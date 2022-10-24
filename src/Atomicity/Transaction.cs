@@ -3,21 +3,21 @@ namespace Atomicity;
 using Configuration;
 using Persistence;
 
-public class TransactionBroker :
+public class Transaction :
     ITransactionBroker
 {
     private TransactionBrokerConfig _config;
-    private readonly ITransactionPersistenceProvider _persistenceProvider;
+    private readonly IPersistenceProvider _persistenceProvider;
     private readonly List<Operation> _operations;
 
-    public TransactionBroker(ITransactionPersistenceProvider persistenceProvider)
+    public Transaction(IPersistenceProvider persistenceProvider)
     {
         _config = AtomicityConfigCache.Default;
         _persistenceProvider = persistenceProvider;
         _operations = new List<Operation>();
     }
 
-    public TransactionBroker Configure(Action<TransactionBrokerConfigurator> configurator)
+    public Transaction Configure(Action<TransactionBrokerConfigurator> configurator)
     {
         TransactionBrokerConfiguratorImpl impl = new TransactionBrokerConfiguratorImpl();
         configurator?.Invoke(impl);
@@ -33,12 +33,12 @@ public class TransactionBroker :
         return this;
     }
 
-    public TransactionBroker Configure()
+    public Transaction Configure()
     {
         return this;
     }
 
-    public TransactionBroker AddOperations(IOperation operation, params IOperation[] operations)
+    public Transaction AddOperations(IOperation operation, params IOperation[] operations)
     {
         _operations.Add(operation.CreateOperation(_operations.Count + 1));
 
