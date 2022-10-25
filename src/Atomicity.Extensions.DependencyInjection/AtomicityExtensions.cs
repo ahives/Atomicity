@@ -8,7 +8,7 @@ public static class AtomicityExtensions
     public static IServiceCollection AddAtomicity(this IServiceCollection services)
     {
         services.AddSingleton<IPersistenceProvider, PersistenceProvider>();
-        services.AddTransient<ITransactionBroker, Transaction>();
+        services.AddTransient<ITransaction, Transaction>();
 
         return services;
     }

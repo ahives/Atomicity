@@ -9,8 +9,8 @@ public class TransactionEntity
     [Column("Id"), Key, Required]
     public Guid Id { get; init; }
     
-    [Column("OperationId")]
-    public Guid OperationId { get; init; }
+    [Column("State")]
+    public int State { get; init; }
     
     [Column("CreationTimestamp")]
     public DateTimeOffset CreationTimestamp { get; init; }

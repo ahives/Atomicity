@@ -2,7 +2,7 @@ namespace Atomicity;
 
 using Configuration;
 
-public interface ITransactionBroker
+public interface ITransaction
 {
     void Execute(Guid transactionId = default);
 

@@ -3,6 +3,14 @@ namespace Atomicity.Persistence;
 public interface IPersistenceProvider
 {
     int GetStartOperation(Guid transactionId);
+
+    bool SaveTransaction(Guid transactionId);
+
+    bool UpdateTransaction(Guid transactionId, TransactionState state);
     
-    void Save(Guid transactionId, string operationName, int operationSequenceNumber);
+    bool TrySaveOperation(Guid transactionId, string operationName, int sequenceNumber);
+
+    bool TryUpdateOperationState(Guid transactionId, OperationState state);
+
+    IReadOnlyList<OperationEntity> GetAllOperations(Guid transactionId);
 }

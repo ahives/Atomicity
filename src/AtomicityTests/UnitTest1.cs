@@ -1,7 +1,6 @@
 namespace AtomicityTests;
 
 using Atomicity;
-using Atomicity.Extensions.DependencyInjection;
 using Atomicity.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,7 +13,8 @@ public class Tests
     public void Init()
     {
         _services = new ServiceCollection()
-            .AddAtomicity()
+            .AddSingleton<IPersistenceProvider, TestPersistenceProvider>()
+            .AddTransient<ITransaction, Transaction>()
             .BuildServiceProvider();
     }
     
@@ -30,7 +30,7 @@ public class Tests
         var op2 = Factory.CreateOperation<Operation2>();
         var op3 = Factory.CreateOperation<Operation3>();
 
-        new Transaction(new PersistenceProvider())
+        new Transaction(new TestPersistenceProvider())
             .Configure(x =>
             {
                 x.TurnOnConsoleLogging();
@@ -49,7 +49,7 @@ public class Tests
         var op2 = Factory.CreateOperation<Operation2>();
         var op3 = Factory.CreateOperation<Operation3>();
 
-        _services.GetService<ITransactionBroker>()
+        _services.GetService<ITransaction>()
             .Configure(x =>
             {
                 x.TurnOnConsoleLogging();
