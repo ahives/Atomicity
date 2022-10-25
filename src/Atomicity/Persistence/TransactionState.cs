@@ -2,8 +2,9 @@ namespace Atomicity.Persistence;
 
 public enum TransactionState
 {
-    New,
-    Pending,
-    Completed,
-    Faulted
+    New = 1,
+    Pending = 2,
+    Faulted = 3,
+    Completed = 4,
+    Compensated = 5
 }

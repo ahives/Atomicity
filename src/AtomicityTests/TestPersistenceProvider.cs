@@ -11,7 +11,7 @@ public class TestPersistenceProvider :
         return 0;
     }
 
-    public bool SaveTransaction(Guid transactionId)
+    public bool SaveTransaction(Guid transactionId, TransactionState state)
     {
         return true;
     }

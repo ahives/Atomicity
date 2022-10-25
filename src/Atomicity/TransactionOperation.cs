@@ -1,40 +1,16 @@
 namespace Atomicity;
 
-using Microsoft.Extensions.Logging;
 using Configuration;
 
-public abstract class TransactionOperation<TOperation> :
-    IOperation
+public class TransactionOperation
 {
-    private readonly ILogger<TransactionOperation<TOperation>> _logger;
+    public OperationConfig Config { get; set; }
 
-    protected TransactionOperation(ILogger<TransactionOperation<TOperation>> logger)
-    {
-        _logger = logger;
-    }
+    public string Name { get; init; }
+    
+    public int SequenceNumber { get; init; }
 
-    protected TransactionOperation()
-    {
-    }
-
-    public virtual Operation CreateOperation(int sequenceNumber) =>
-        new()
-        {
-            Name = GetName(),
-            SequenceNumber = sequenceNumber,
-            Work = DoWork(),
-            Compensation = Compensate(),
-            Config = Configure()
-        };
-
-    protected virtual OperationConfig Configure() => OperationConfigCache.Default;
-
-    protected virtual string GetName() => typeof(TOperation).FullName ?? throw new InvalidOperationException();
-
-    protected virtual Action Compensate() => () =>
-    {
-        // _logger.LogDebug("You forgot to add compensation logic");
-    };
-
-    protected abstract Func<bool> DoWork();
+    public Func<bool> Work { get; set; }
+    
+    public Action Compensation { get; set; }
 }

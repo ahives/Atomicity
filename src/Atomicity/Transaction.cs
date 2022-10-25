@@ -9,14 +9,14 @@ public class Transaction :
 {
     private TransactionBrokerConfig _config;
     private readonly IPersistenceProvider _persistenceProvider;
-    private readonly List<Operation> _operations;
+    private readonly List<TransactionOperation> _operations;
     private Guid _transactionId;
 
     public Transaction(IPersistenceProvider persistenceProvider)
     {
         _config = AtomicityConfigCache.Default;
         _persistenceProvider = persistenceProvider;
-        _operations = new List<Operation>();
+        _operations = new List<TransactionOperation>();
         _transactionId = NewId.NextGuid();
     }
 
@@ -43,9 +43,7 @@ public class Transaction :
 
     public Transaction AddOperations(IOperation operation, params IOperation[] operations)
     {
-        bool transactionCreated = _persistenceProvider.SaveTransaction(_transactionId);
-
-        if (!transactionCreated)
+        if (!_persistenceProvider.SaveTransaction(_transactionId, TransactionState.New))
             return this;
 
         var op = operation.CreateOperation(_operations.Count + 1);
@@ -62,6 +60,8 @@ public class Transaction :
                 _operations[i].SequenceNumber);
         }
         
+        _persistenceProvider.SaveTransaction(_transactionId, TransactionState.Pending);
+
         return this;
     }
 
@@ -71,6 +71,16 @@ public class Transaction :
             return;
 
         bool compensated = TryDoCompensation(_transactionId, faultedIndex);
+    }
+
+    public static Transaction Create()
+    {
+        return new Transaction(new PersistenceProvider());
+    }
+
+    public static Transaction Create(IPersistenceProvider provider)
+    {
+        return new Transaction(provider);
     }
 
     bool TryDoWork(Guid transactionId, out int faultedIndex)

@@ -26,9 +26,9 @@ public class Tests
     [Test]
     public void Test1()
     {
-        var op1 = Factory.CreateOperation<Operation1>();
-        var op2 = Factory.CreateOperation<Operation2>();
-        var op3 = Factory.CreateOperation<Operation3>();
+        var op1 = Operation.Create<Operation1>();
+        var op2 = Operation.Create<Operation2>();
+        var op3 = Operation.Create<Operation3>();
 
         new Transaction(new TestPersistenceProvider())
             .Configure(x =>
@@ -45,9 +45,28 @@ public class Tests
     [Test]
     public void Test2()
     {
-        var op1 = Factory.CreateOperation<Operation1>();
-        var op2 = Factory.CreateOperation<Operation2>();
-        var op3 = Factory.CreateOperation<Operation3>();
+        var op1 = Operation.Create<Operation1>();
+        var op2 = Operation.Create<Operation2>();
+        var op3 = Operation.Create<Operation3>();
+
+        Transaction.Create(new TestPersistenceProvider())
+            .Configure(x =>
+            {
+                x.TurnOnConsoleLogging();
+                x.Retry();
+            })
+            .AddOperations(op1, op2, op3)
+            .Execute();
+        
+        Assert.Pass();
+    }
+
+    [Test]
+    public void Test3()
+    {
+        var op1 = Operation.Create<Operation1>();
+        var op2 = Operation.Create<Operation2>();
+        var op3 = Operation.Create<Operation3>();
 
         _services.GetService<ITransaction>()
             .Configure(x =>
@@ -62,7 +81,7 @@ public class Tests
     }
 
     class Operation1 :
-        TransactionOperation<Operation1>
+        Operation<Operation1>
     {
         protected override Func<bool> DoWork()
         {
@@ -79,7 +98,7 @@ public class Tests
     }
 
     class Operation2 :
-        TransactionOperation<Operation2>
+        Operation<Operation2>
     {
         protected override Func<bool> DoWork()
         {
@@ -96,7 +115,7 @@ public class Tests
     }
 
     class Operation3 :
-        TransactionOperation<Operation3>
+        Operation<Operation3>
     {
         protected override Func<bool> DoWork()
         {

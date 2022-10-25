@@ -19,8 +19,12 @@ public class PersistenceProvider :
         return operation.SequenceNumber - 1;
     }
 
-    public bool SaveTransaction(Guid transactionId)
+    public bool SaveTransaction(Guid transactionId, TransactionState state)
     {
+        using var db = new TransactionDbContext();
+
+        db.Transactions.Add(new TransactionEntity {Id = transactionId, State = (int)state, CreationTimestamp = DateTimeOffset.UtcNow});
+        
         return true;
     }
 
