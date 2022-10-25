@@ -65,17 +65,26 @@ public class Transaction :
         return this;
     }
 
-    public void Execute(Guid transactionId = default)
+    public void Execute()
+    {
+        if (!TryDoWork(_transactionId, out int faultedIndex))
+            return;
+
+        bool compensated = TryDoCompensation(_transactionId, faultedIndex);
+    }
+
+    bool TryDoWork(Guid transactionId, out int faultedIndex)
     {
         bool operationFailed = false;
-        int faultedIndex = -1;
         int start = _persistenceProvider.GetStartOperation(transactionId);
+
+        faultedIndex = -1;
         
         for (int i = start; i < _operations.Count; i++)
         {
             if (_config.ConsoleLoggingOn)
                 Console.WriteLine($"Executing operation {_operations[i].SequenceNumber}");
-            
+
             if (_operations[i].Work.Invoke())
             {
                 _persistenceProvider.TryUpdateOperationState(transactionId, OperationState.Completed);
@@ -89,20 +98,17 @@ public class Transaction :
             break;
         }
 
-        if (!operationFailed)
-            return;
-
-        DoCompensation(faultedIndex);
+        return operationFailed;
     }
 
-    void DoCompensation(int faultedIndex)
+    bool TryDoCompensation(Guid transactionId, int faultedIndex)
     {
-        bool transactionUpdated = _persistenceProvider.UpdateTransaction(_transactionId, TransactionState.Faulted);
+        bool transactionUpdated = _persistenceProvider.UpdateTransaction(transactionId, TransactionState.Faulted);
 
         if (!transactionUpdated)
-            return;
+            return false;
 
-        var operations = _persistenceProvider.GetAllOperations(_transactionId);
+        var operations = _persistenceProvider.GetAllOperations(transactionId);
 
         for (int i = faultedIndex; i >= 0; i--)
         {
@@ -113,6 +119,8 @@ public class Transaction :
 
             _persistenceProvider.TryUpdateOperationState(operations[i].Id, OperationState.Compensated);
         }
+
+        return true;
     }
 
 
