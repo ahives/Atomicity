@@ -30,6 +30,20 @@ public class PersistenceProvider :
 
     public bool UpdateTransaction(Guid transactionId, TransactionState state)
     {
+        using var db = new TransactionDbContext();
+
+        var transaction = (from trans in db.Transactions
+                where trans.Id == transactionId
+                select trans)
+            .FirstOrDefault();
+
+        if (transaction == null)
+            return false;
+
+        transaction.State = (int) state;
+
+        db.Transactions.Update(transaction);
+
         return true;
     }
 

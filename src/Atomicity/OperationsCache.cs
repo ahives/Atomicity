@@ -2,5 +2,5 @@ namespace Atomicity;
 
 internal static class OperationsCache
 {
-    public static readonly IOperation Empty = new EmptyTransactionOperation();
+    public static readonly IOperationBuilder Empty = new EmptyOperationBuilder();
 }

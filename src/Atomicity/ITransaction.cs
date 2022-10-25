@@ -6,7 +6,7 @@ public interface ITransaction
 {
     void Execute();
 
-    Transaction AddOperations(IOperation operation, params IOperation[] operations);
+    Transaction AddOperations(IOperationBuilder builder, params IOperationBuilder[] builders);
 
     Transaction Configure(Action<TransactionBrokerConfigurator> configurator);
 

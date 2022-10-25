@@ -81,7 +81,7 @@ public class Tests
     }
 
     class Operation1 :
-        Operation<Operation1>
+        OperationBuilder<Operation1>
     {
         protected override Func<bool> DoWork()
         {
@@ -98,7 +98,7 @@ public class Tests
     }
 
     class Operation2 :
-        Operation<Operation2>
+        OperationBuilder<Operation2>
     {
         protected override Func<bool> DoWork()
         {
@@ -115,7 +115,7 @@ public class Tests
     }
 
     class Operation3 :
-        Operation<Operation3>
+        OperationBuilder<Operation3>
     {
         protected override Func<bool> DoWork()
         {

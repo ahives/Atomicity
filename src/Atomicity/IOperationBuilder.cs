@@ -1,6 +1,6 @@
 namespace Atomicity;
 
-public interface IOperation
+public interface IOperationBuilder
 {
     TransactionOperation CreateOperation(int sequenceNumber);
 }

@@ -8,14 +8,14 @@ public class Transaction :
     ITransaction
 {
     private TransactionBrokerConfig _config;
-    private readonly IPersistenceProvider _persistenceProvider;
+    private readonly IPersistenceProvider _persistence;
     private readonly List<TransactionOperation> _operations;
     private Guid _transactionId;
 
-    public Transaction(IPersistenceProvider persistenceProvider)
+    public Transaction(IPersistenceProvider persistence)
     {
         _config = AtomicityConfigCache.Default;
-        _persistenceProvider = persistenceProvider;
+        _persistence = persistence;
         _operations = new List<TransactionOperation>();
         _transactionId = NewId.NextGuid();
     }
@@ -41,26 +41,26 @@ public class Transaction :
         return this;
     }
 
-    public Transaction AddOperations(IOperation operation, params IOperation[] operations)
+    public Transaction AddOperations(IOperationBuilder builder, params IOperationBuilder[] builders)
     {
-        if (!_persistenceProvider.SaveTransaction(_transactionId, TransactionState.New))
+        if (!_persistence.SaveTransaction(_transactionId, TransactionState.New))
             return this;
 
-        var op = operation.CreateOperation(_operations.Count + 1);
+        var op = builder.CreateOperation(_operations.Count + 1);
         _operations.Add(op);
 
-        _persistenceProvider.TrySaveOperation(_transactionId, op.Name, op.SequenceNumber);
+        _persistence.TrySaveOperation(_transactionId, op.Name, op.SequenceNumber);
 
-        for (int i = 0; i < operations.Length; i++)
+        for (int i = 0; i < builders.Length; i++)
         {
-            _operations.Add(operations[i].CreateOperation(_operations.Count + 1));
+            var operation = builders[i].CreateOperation(_operations.Count + 1);
+            _operations.Add(operation);
             
             // TODO: add retry logic here later to ensure operations are saved before continue
-            _persistenceProvider.TrySaveOperation(_transactionId, _operations[i].Name,
-                _operations[i].SequenceNumber);
+            _persistence.TrySaveOperation(_transactionId, operation.Name, operation.SequenceNumber);
         }
         
-        _persistenceProvider.SaveTransaction(_transactionId, TransactionState.Pending);
+        _persistence.SaveTransaction(_transactionId, TransactionState.Pending);
 
         return this;
     }
@@ -86,7 +86,7 @@ public class Transaction :
     bool TryDoWork(Guid transactionId, out int faultedIndex)
     {
         bool operationFailed = false;
-        int start = _persistenceProvider.GetStartOperation(transactionId);
+        int start = _persistence.GetStartOperation(transactionId);
 
         faultedIndex = -1;
         
@@ -97,11 +97,11 @@ public class Transaction :
 
             if (_operations[i].Work.Invoke())
             {
-                _persistenceProvider.TryUpdateOperationState(transactionId, OperationState.Completed);
+                _persistence.TryUpdateOperationState(transactionId, OperationState.Completed);
                 continue;
             }
 
-            _persistenceProvider.TryUpdateOperationState(transactionId, OperationState.Faulted);
+            _persistence.TryUpdateOperationState(transactionId, OperationState.Faulted);
 
             operationFailed = true;
             faultedIndex = i;
@@ -113,12 +113,12 @@ public class Transaction :
 
     bool TryDoCompensation(Guid transactionId, int faultedIndex)
     {
-        bool transactionUpdated = _persistenceProvider.UpdateTransaction(transactionId, TransactionState.Faulted);
+        bool transactionUpdated = _persistence.UpdateTransaction(transactionId, TransactionState.Faulted);
 
         if (!transactionUpdated)
             return false;
 
-        var operations = _persistenceProvider.GetAllOperations(transactionId);
+        var operations = _persistence.GetAllOperations(transactionId);
 
         for (int i = faultedIndex; i >= 0; i--)
         {
@@ -127,7 +127,7 @@ public class Transaction :
 
             _operations[i].Compensation.Invoke();
 
-            _persistenceProvider.TryUpdateOperationState(operations[i].Id, OperationState.Compensated);
+            _persistence.TryUpdateOperationState(operations[i].Id, OperationState.Compensated);
         }
 
         return true;

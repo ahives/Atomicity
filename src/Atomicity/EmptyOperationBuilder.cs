@@ -1,7 +1,7 @@
 namespace Atomicity;
 
-internal class EmptyTransactionOperation :
-    IOperation
+internal class EmptyOperationBuilder :
+    IOperationBuilder
 {
     public TransactionOperation CreateOperation(int sequenceNumber) =>
         new()
