@@ -43,13 +43,13 @@ public class Transaction :
 
     public Transaction AddOperations(IOperationBuilder builder, params IOperationBuilder[] builders)
     {
-        if (!_persistence.TrySaveTransaction(_transactionId, TransactionState.New))
+        if (!_persistence.TrySaveTransaction(_transactionId))
             throw new TransactionPersistenceException();
 
         var op = builder.CreateOperation(_transactionId, _operations.Count + 1);
         _operations.Add(op);
 
-        if (!_persistence.TrySaveOperation(op, OperationState.New))
+        if (!_persistence.TrySaveOperation(op))
             throw new TransactionPersistenceException();
 
         if (!_persistence.TryUpdateTransaction(_transactionId, TransactionState.Pending))
@@ -60,7 +60,7 @@ public class Transaction :
             var operation = builders[i].CreateOperation(_transactionId, _operations.Count + 1);
             _operations.Add(operation);
             
-            if (!_persistence.TrySaveOperation(operation, OperationState.New))
+            if (!_persistence.TrySaveOperation(operation))
                 throw new TransactionPersistenceException();
         }
         

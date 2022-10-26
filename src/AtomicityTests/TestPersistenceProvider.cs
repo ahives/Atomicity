@@ -12,7 +12,7 @@ public class TestPersistenceProvider :
         return 0;
     }
 
-    public bool TrySaveTransaction(Guid transactionId, TransactionState state)
+    public bool TrySaveTransaction(Guid transactionId)
     {
         return true;
     }
@@ -22,7 +22,7 @@ public class TestPersistenceProvider :
         return true;
     }
 
-    public bool TrySaveOperation(TransactionOperation operation, OperationState state)
+    public bool TrySaveOperation(TransactionOperation operation)
     {
         return true;
     }

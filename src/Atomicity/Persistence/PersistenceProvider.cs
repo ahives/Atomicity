@@ -19,11 +19,11 @@ public class PersistenceProvider :
         return operation.SequenceNumber - 1;
     }
 
-    public bool TrySaveTransaction(Guid transactionId, TransactionState state)
+    public bool TrySaveTransaction(Guid transactionId)
     {
         using var db = new TransactionDbContext();
 
-        db.Transactions.Add(new TransactionEntity {Id = transactionId, State = (int)state, CreationTimestamp = DateTimeOffset.UtcNow});
+        db.Transactions.Add(new TransactionEntity {Id = transactionId, State = (int)TransactionState.New, CreationTimestamp = DateTimeOffset.UtcNow});
         
         return true;
     }
@@ -47,7 +47,7 @@ public class PersistenceProvider :
         return true;
     }
 
-    public bool TrySaveOperation(TransactionOperation operation, OperationState state)
+    public bool TrySaveOperation(TransactionOperation operation)
     {
         return true;
     }
