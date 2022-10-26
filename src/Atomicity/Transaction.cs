@@ -43,13 +43,17 @@ public class Transaction :
 
     public Transaction AddOperations(IOperationBuilder builder, params IOperationBuilder[] builders)
     {
-        if (!_persistence.SaveTransaction(_transactionId, TransactionState.New))
-            return this;
+        if (!_persistence.TrySaveTransaction(_transactionId, TransactionState.New))
+            throw new TransactionPersistenceException();
 
         var op = builder.CreateOperation(_operations.Count + 1);
         _operations.Add(op);
 
-        _persistence.TrySaveOperation(_transactionId, op.Name, op.SequenceNumber);
+        if (!_persistence.TrySaveOperation(_transactionId, op.Name, op.SequenceNumber, OperationState.New))
+            throw new TransactionPersistenceException();
+
+        if (!_persistence.TryUpdateTransaction(_transactionId, TransactionState.Pending))
+            throw new TransactionPersistenceException();
 
         for (int i = 0; i < builders.Length; i++)
         {
@@ -57,10 +61,12 @@ public class Transaction :
             _operations.Add(operation);
             
             // TODO: add retry logic here later to ensure operations are saved before continue
-            _persistence.TrySaveOperation(_transactionId, operation.Name, operation.SequenceNumber);
+            if (!_persistence.TrySaveOperation(_transactionId, operation.Name, operation.SequenceNumber, OperationState.New))
+                throw new TransactionPersistenceException();
         }
         
-        _persistence.SaveTransaction(_transactionId, TransactionState.Pending);
+        if (!_persistence.TryUpdateTransaction(_transactionId, TransactionState.Pending))
+            throw new TransactionPersistenceException();
 
         return this;
     }
@@ -113,7 +119,7 @@ public class Transaction :
 
     bool TryDoCompensation(Guid transactionId, int faultedIndex)
     {
-        bool transactionUpdated = _persistence.UpdateTransaction(transactionId, TransactionState.Faulted);
+        bool transactionUpdated = _persistence.TryUpdateTransaction(transactionId, TransactionState.Faulted);
 
         if (!transactionUpdated)
             return false;

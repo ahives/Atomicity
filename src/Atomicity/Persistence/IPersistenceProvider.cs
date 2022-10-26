@@ -4,11 +4,11 @@ public interface IPersistenceProvider
 {
     int GetStartOperation(Guid transactionId);
 
-    bool SaveTransaction(Guid transactionId, TransactionState state);
+    bool TrySaveTransaction(Guid transactionId, TransactionState state);
 
-    bool UpdateTransaction(Guid transactionId, TransactionState state);
+    bool TryUpdateTransaction(Guid transactionId, TransactionState state);
     
-    bool TrySaveOperation(Guid transactionId, string operationName, int sequenceNumber);
+    bool TrySaveOperation(Guid transactionId, string operationName, int sequenceNumber, OperationState state);
 
     bool TryUpdateOperationState(Guid transactionId, OperationState state);
 

@@ -19,7 +19,7 @@ public class PersistenceProvider :
         return operation.SequenceNumber - 1;
     }
 
-    public bool SaveTransaction(Guid transactionId, TransactionState state)
+    public bool TrySaveTransaction(Guid transactionId, TransactionState state)
     {
         using var db = new TransactionDbContext();
 
@@ -28,7 +28,7 @@ public class PersistenceProvider :
         return true;
     }
 
-    public bool UpdateTransaction(Guid transactionId, TransactionState state)
+    public bool TryUpdateTransaction(Guid transactionId, TransactionState state)
     {
         using var db = new TransactionDbContext();
 
@@ -47,7 +47,7 @@ public class PersistenceProvider :
         return true;
     }
 
-    public bool TrySaveOperation(Guid transactionId, string operationName, int sequenceNumber)
+    public bool TrySaveOperation(Guid transactionId, string operationName, int sequenceNumber, OperationState state)
     {
         return true;
     }

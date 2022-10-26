@@ -11,17 +11,17 @@ public class TestPersistenceProvider :
         return 0;
     }
 
-    public bool SaveTransaction(Guid transactionId, TransactionState state)
+    public bool TrySaveTransaction(Guid transactionId, TransactionState state)
     {
         return true;
     }
 
-    public bool UpdateTransaction(Guid transactionId, TransactionState state)
+    public bool TryUpdateTransaction(Guid transactionId, TransactionState state)
     {
         return true;
     }
 
-    public bool TrySaveOperation(Guid transactionId, string operationName, int sequenceNumber)
+    public bool TrySaveOperation(Guid transactionId, string operationName, int sequenceNumber, OperationState state)
     {
         return true;
     }
