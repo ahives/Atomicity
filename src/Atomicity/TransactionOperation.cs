@@ -8,6 +8,10 @@ public class TransactionOperation
 
     public string Name { get; init; }
     
+    public Guid OperationId { get; init; }
+    
+    public Guid TransactionId { get; init; }
+    
     public int SequenceNumber { get; init; }
 
     public Func<bool> Work { get; set; }

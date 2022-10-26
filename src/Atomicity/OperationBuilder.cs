@@ -1,6 +1,7 @@
 namespace Atomicity;
 
 using Microsoft.Extensions.Logging;
+using MassTransit;
 using Configuration;
 
 public abstract class OperationBuilder<TOperation> :
@@ -17,9 +18,11 @@ public abstract class OperationBuilder<TOperation> :
     {
     }
 
-    public virtual TransactionOperation CreateOperation(int sequenceNumber) =>
+    public TransactionOperation CreateOperation(Guid transactionId, int sequenceNumber) =>
         new()
         {
+            TransactionId = transactionId,
+            OperationId = NewId.NextGuid(),
             Name = GetName(),
             SequenceNumber = sequenceNumber,
             Work = DoWork(),

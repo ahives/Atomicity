@@ -46,10 +46,10 @@ public class Transaction :
         if (!_persistence.TrySaveTransaction(_transactionId, TransactionState.New))
             throw new TransactionPersistenceException();
 
-        var op = builder.CreateOperation(_operations.Count + 1);
+        var op = builder.CreateOperation(_transactionId, _operations.Count + 1);
         _operations.Add(op);
 
-        if (!_persistence.TrySaveOperation(_transactionId, op.Name, op.SequenceNumber, OperationState.New))
+        if (!_persistence.TrySaveOperation(op, OperationState.New))
             throw new TransactionPersistenceException();
 
         if (!_persistence.TryUpdateTransaction(_transactionId, TransactionState.Pending))
@@ -57,11 +57,10 @@ public class Transaction :
 
         for (int i = 0; i < builders.Length; i++)
         {
-            var operation = builders[i].CreateOperation(_operations.Count + 1);
+            var operation = builders[i].CreateOperation(_transactionId, _operations.Count + 1);
             _operations.Add(operation);
             
-            // TODO: add retry logic here later to ensure operations are saved before continue
-            if (!_persistence.TrySaveOperation(_transactionId, operation.Name, operation.SequenceNumber, OperationState.New))
+            if (!_persistence.TrySaveOperation(operation, OperationState.New))
                 throw new TransactionPersistenceException();
         }
         
@@ -101,9 +100,14 @@ public class Transaction :
             if (_config.ConsoleLoggingOn)
                 Console.WriteLine($"Executing operation {_operations[i].SequenceNumber}");
 
+            if (!_persistence.TryUpdateOperationState(_operations[i].OperationId, OperationState.Pending))
+                throw new TransactionPersistenceException();
+
             if (_operations[i].Work.Invoke())
             {
-                _persistence.TryUpdateOperationState(transactionId, OperationState.Completed);
+                if (!_persistence.TryUpdateOperationState(transactionId, OperationState.Completed))
+                    throw new TransactionPersistenceException();
+
                 continue;
             }
 
@@ -124,8 +128,6 @@ public class Transaction :
         if (!transactionUpdated)
             return false;
 
-        var operations = _persistence.GetAllOperations(transactionId);
-
         for (int i = faultedIndex; i >= 0; i--)
         {
             if (_config.ConsoleLoggingOn)
@@ -133,7 +135,7 @@ public class Transaction :
 
             _operations[i].Compensation.Invoke();
 
-            _persistence.TryUpdateOperationState(operations[i].Id, OperationState.Compensated);
+            _persistence.TryUpdateOperationState(_operations[i].OperationId, OperationState.Compensated);
         }
 
         return true;

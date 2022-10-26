@@ -47,12 +47,12 @@ public class PersistenceProvider :
         return true;
     }
 
-    public bool TrySaveOperation(Guid transactionId, string operationName, int sequenceNumber, OperationState state)
+    public bool TrySaveOperation(TransactionOperation operation, OperationState state)
     {
         return true;
     }
 
-    public bool TryUpdateOperationState(Guid transactionId, OperationState state)
+    public bool TryUpdateOperationState(Guid operationId, OperationState state)
     {
         return true;
     }

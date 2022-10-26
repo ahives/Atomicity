@@ -8,9 +8,9 @@ public interface IPersistenceProvider
 
     bool TryUpdateTransaction(Guid transactionId, TransactionState state);
     
-    bool TrySaveOperation(Guid transactionId, string operationName, int sequenceNumber, OperationState state);
+    bool TrySaveOperation(TransactionOperation operation, OperationState state);
 
-    bool TryUpdateOperationState(Guid transactionId, OperationState state);
+    bool TryUpdateOperationState(Guid operationId, OperationState state);
 
     IReadOnlyList<OperationEntity> GetAllOperations(Guid transactionId);
 }
