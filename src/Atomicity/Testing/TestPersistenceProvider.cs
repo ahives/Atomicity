@@ -1,7 +1,6 @@
-namespace AtomicityTests;
+namespace Atomicity.Testing;
 
-using Atomicity;
-using Atomicity.Persistence;
+using Persistence;
 using MassTransit;
 
 public class TestPersistenceProvider :

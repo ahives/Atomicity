@@ -1,4 +1,4 @@
-namespace Atomicity.Persistence;
+namespace Atomicity;
 
 public enum OperationState
 {

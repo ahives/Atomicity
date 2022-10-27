@@ -15,6 +15,6 @@ public class TransactionOperation
     public OperationConfig Config { get; set; }
 
     public Func<bool> Work { get; set; }
-    
+
     public Action Compensation { get; set; }
 }

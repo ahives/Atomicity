@@ -1,3 +1,5 @@
+using System.Buffers;
+
 namespace Atomicity;
 
 using Configuration;
@@ -10,7 +12,7 @@ public class Transaction :
     private TransactionBrokerConfig _config;
     private readonly IPersistenceProvider _persistence;
     private readonly List<TransactionOperation> _operations;
-    private Guid _transactionId;
+    private readonly Guid _transactionId;
 
     public Transaction(IPersistenceProvider persistence)
     {
@@ -63,15 +65,15 @@ public class Transaction :
             if (!_persistence.TrySaveOperation(operation))
                 throw new TransactionPersistenceException();
         }
-        
-        if (!_persistence.TryUpdateTransaction(_transactionId, TransactionState.Pending))
-            throw new TransactionPersistenceException();
 
         return this;
     }
 
     public void Execute()
     {
+        if (!IsVerified(out TransactionReport report))
+            return;
+
         if (!TryDoWork(_transactionId, out int faultedIndex))
             return;
 
@@ -88,13 +90,30 @@ public class Transaction :
         return new Transaction(provider);
     }
 
+    bool IsVerified(out TransactionReport report)
+    {
+        // TODO: add logic to compare database and in-memory operations before executing
+        report = new TransactionReport();
+        return true;
+    }
+
+    // public IReadOnlyList<OperationStatus> GetOperationStatus()
+    // {
+    //     return _persistence
+    //         .GetAllOperations(_transactionId)
+    //         .Select(x => new {x.TransactionId, OperationId = x.Id, (OperationState)x.State});
+    // }
+
     bool TryDoWork(Guid transactionId, out int faultedIndex)
     {
         bool operationFailed = false;
         int start = _persistence.GetStartOperation(transactionId);
 
         faultedIndex = -1;
-        
+
+        if (!_persistence.TryUpdateTransaction(_transactionId, TransactionState.Pending))
+            throw new TransactionPersistenceException();
+
         for (int i = start; i < _operations.Count; i++)
         {
             if (_config.ConsoleLoggingOn)
@@ -118,14 +137,23 @@ public class Transaction :
             break;
         }
 
+        if (operationFailed)
+        {
+            if (!_persistence.TryUpdateTransaction(_transactionId, TransactionState.Faulted))
+                throw new TransactionPersistenceException();
+        }
+        else
+        {
+            if (!_persistence.TryUpdateTransaction(_transactionId, TransactionState.Completed))
+                throw new TransactionPersistenceException();
+        }
+
         return operationFailed;
     }
 
     bool TryDoCompensation(Guid transactionId, int faultedIndex)
     {
-        bool transactionUpdated = _persistence.TryUpdateTransaction(transactionId, TransactionState.Faulted);
-
-        if (!transactionUpdated)
+        if (!_persistence.TryUpdateTransaction(transactionId, TransactionState.Faulted))
             return false;
 
         for (int i = faultedIndex; i >= 0; i--)
@@ -135,8 +163,12 @@ public class Transaction :
 
             _operations[i].Compensation.Invoke();
 
-            _persistence.TryUpdateOperationState(_operations[i].OperationId, OperationState.Compensated);
+            if (!_persistence.TryUpdateOperationState(_operations[i].OperationId, OperationState.Compensated))
+                throw new TransactionPersistenceException();
         }
+
+        if (!_persistence.TryUpdateTransaction(_transactionId, TransactionState.Compensated))
+            throw new TransactionPersistenceException();
 
         return true;
     }

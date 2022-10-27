@@ -2,6 +2,7 @@ namespace AtomicityTests;
 
 using Atomicity;
 using Atomicity.Persistence;
+using Atomicity.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 [TestFixture]
@@ -30,7 +31,7 @@ public class Tests
         var op2 = Operation.Create<Operation2>();
         var op3 = Operation.Create<Operation3>();
 
-        new Transaction(new TestPersistenceProvider())
+        new Transaction(TestPersistence.Provider)
             .Configure(x =>
             {
                 x.TurnOnConsoleLogging();
@@ -49,7 +50,7 @@ public class Tests
         var op2 = Operation.Create<Operation2>();
         var op3 = Operation.Create<Operation3>();
 
-        Transaction.Create(new TestPersistenceProvider())
+        Transaction.Create(TestPersistence.Provider)
             .Configure(x =>
             {
                 x.TurnOnConsoleLogging();
