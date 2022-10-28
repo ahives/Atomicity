@@ -1,10 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atomicity", "Atomicity\Atomicity.csproj", "{F5DD36CE-8995-4B67-BADD-EF42B12C70C6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atomicity", "src\Atomicity\Atomicity.csproj", "{F5DD36CE-8995-4B67-BADD-EF42B12C70C6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtomicityTests", "AtomicityTests\AtomicityTests.csproj", "{D97AC351-67AE-4153-B443-4F55317F00A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtomicityTests", "src\AtomicityTests\AtomicityTests.csproj", "{D97AC351-67AE-4153-B443-4F55317F00A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atomicity.Extensions.DependencyInjection", "Atomicity.Extensions.DependencyInjection\Atomicity.Extensions.DependencyInjection.csproj", "{74E9355A-C4BF-469B-872A-583824E0F379}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atomicity.Extensions.DependencyInjection", "src\Atomicity.Extensions.DependencyInjection\Atomicity.Extensions.DependencyInjection.csproj", "{74E9355A-C4BF-469B-872A-583824E0F379}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
