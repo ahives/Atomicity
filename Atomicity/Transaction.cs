@@ -68,10 +68,10 @@ public class Transaction :
         // if (!IsVerified(out ValidationResult report))
         //     return;
 
-        if (!TryDoWork(_transactionId, out int faultedIndex))
+        if (!TryDoWork(_transactionId, _operations, out int index))
             return;
 
-        bool compensated = TryDoCompensation(_transactionId, faultedIndex);
+        bool compensated = TryDoCompensation(_transactionId, _operations, index);
     }
 
     public static Transaction Create()
@@ -128,24 +128,24 @@ public class Transaction :
     //         .Select(x => new {x.TransactionId, OperationId = x.Id, (OperationState)x.State});
     // }
 
-    bool TryDoWork(Guid transactionId, out int faultedIndex)
+    bool TryDoWork(Guid transactionId, IReadOnlyList<TransactionOperation> operations, out int index)
     {
         bool operationFailed = false;
         int start = _persistence.GetStartOperation(transactionId);
 
-        faultedIndex = -1;
+        index = -1;
 
         ThrowIfUpdateFailed(_persistence.TryUpdateTransaction, _transactionId, TransactionState.Pending);
         
-        var operations = _persistence.GetAllOperations(_transactionId);
+        var persistedOperations = _persistence.GetAllOperations(_transactionId);
         var results = new List<ValidationResult>();
 
         for (int i = start; i < _operations.Count; i++)
         {
             if (_config.ConsoleLoggingOn)
-                Console.WriteLine($"Executing operation {_operations[i].SequenceNumber}");
+                Console.WriteLine($"Executing operation {operations[i].SequenceNumber}");
 
-            if (!_operations[i].VerifyIsExecutable(_transactionId, operations, out ValidationResult result))
+            if (!operations[i].VerifyIsExecutable(_transactionId, persistedOperations, out ValidationResult result))
             {
                 results.Add(result);
                 continue;
@@ -155,7 +155,7 @@ public class Transaction :
             
             ThrowIfUpdateFailed(_persistence.TryUpdateOperationState, transactionId, OperationState.Pending);
 
-            if (_operations[i].Work.Invoke())
+            if (operations[i].Work.Invoke())
             {
                 ThrowIfUpdateFailed(_persistence.TryUpdateOperationState, transactionId, OperationState.Completed);
                 continue;
@@ -164,7 +164,7 @@ public class Transaction :
             ThrowIfUpdateFailed(_persistence.TryUpdateOperationState, transactionId, OperationState.Failed);
 
             operationFailed = true;
-            faultedIndex = i;
+            index = i;
             break;
         }
 
@@ -174,24 +174,21 @@ public class Transaction :
         return operationFailed;
     }
 
-    bool TryDoCompensation(Guid transactionId, int faultedIndex)
+    bool TryDoCompensation(Guid transactionId, IReadOnlyList<TransactionOperation> operations, int index)
     {
-        if (!_persistence.TryUpdateTransaction(transactionId, TransactionState.Failed))
-            return false;
+        ThrowIfUpdateFailed(_persistence.TryUpdateTransaction, transactionId, TransactionState.Failed);
 
-        for (int i = faultedIndex; i >= 0; i--)
+        for (int i = index; i >= 0; i--)
         {
             if (_config.ConsoleLoggingOn)
-                Console.WriteLine($"Compensating operation {_operations[i].SequenceNumber}");
+                Console.WriteLine($"Compensating operation {operations[i].SequenceNumber}");
 
-            _operations[i].Compensation.Invoke();
+            operations[i].Compensation.Invoke();
 
-            if (!_persistence.TryUpdateOperationState(_operations[i].OperationId, OperationState.Compensated))
-                throw new TransactionPersistenceException();
+            ThrowIfUpdateFailed(_persistence.TryUpdateOperationState, operations[i].OperationId, OperationState.Compensated);
         }
 
-        if (!_persistence.TryUpdateTransaction(_transactionId, TransactionState.Compensated))
-            throw new TransactionPersistenceException();
+        ThrowIfUpdateFailed(_persistence.TryUpdateTransaction, transactionId, TransactionState.Compensated);
 
         return true;
     }
